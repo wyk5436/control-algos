@@ -1,0 +1,19 @@
+# Python generated files
+*.pyc
+.ipynb_checkpoints
+
+# LaTeX generated files
+*.aux
+*.bbl
+*.blg
+*.fdb_latexmk
+*.fls
+*.log
+*.synctex.gz
+*.toc
+
+# PDF
+*.pdf
+
+# MATLAB saves
+*.asv

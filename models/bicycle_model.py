@@ -6,33 +6,23 @@ class bicycle_model(EOM):
 
     __author__ = "bryantzhou"
 
-    def __init__(self, L=None, delta=None, parameters=None):
+    """
+    states:[x,
+            y,
+            theta,
+            v]
+    They are: x, y: vehicle's 2D position; 
+                theta: the angle of the bicycle’s forwards direction with respect to the x-axis;
+                v: vehicle's velocity
+    
+    Control inputs: a: acceleration; delta: steering angle
+    """
 
-        assert isinstance(parameters, (type(None), dict))
-
-        if parameters is None:
-            assert isinstance(L, float)
-            assert isinstance(delta, float)
-        else:
-            items = ['L', 'delta']
-            for item in items:
-                assert item in parameters.keys()
-                assert isinstance(parameters[item], float)
-            L = parameters['L']
-            delta = parameters['delta']
+    def __init__(self, L, a, delta):
 
         self.L = L
+        self.a = a
         self.delta = delta
-
-    @staticmethod
-    def get_standard_parameters():
-
-        parameter_set = {'L': 0.0, 'delta': 0.0}
-
-        parameter_set['L'] = 5.0
-        parameter_set['delta'] = 10.0
-
-        return parameter_set
     
     def _evaluate(self, stepsize, time, states):
 
@@ -41,6 +31,6 @@ class bicycle_model(EOM):
         ds[0] = states[3] * math.cos(states[2])
         ds[1] = states[3] * math.sin(states[2])
         ds[2] = states[3] * math.tan(self.delta) / self.L
-        ds[3] = 0
+        ds[3] = self.a
 
         return ds

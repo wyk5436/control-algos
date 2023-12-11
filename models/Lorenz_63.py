@@ -1,12 +1,12 @@
 from eom.eom import EOM
 
 
-class L63(EOM):
+class L63:
     """The Lorenz 1963 Model."""
 
     __author__ = 'bryantzhou'
 
-    def __init__(self, sigma=None, rho=None, beta=None, parameters=None, use_variational=False):
+    def __init__(self, sigma=None, rho=None, beta=None, parameters=None):
         super().__init__()
 
         assert isinstance(parameters, (type(None), dict))
@@ -28,11 +28,6 @@ class L63(EOM):
         self.sigma = sigma
         self.rho = rho
         self.beta = beta
-        self.number_of_nonvariational_states = 3
-        self.number_of_Df_rows = 3
-        self.number_of_Df_columns = 3
-        self.number_of_variational_states = self.number_of_Df_rows * self.number_of_Df_columns
-        self.set_variational_on(use_variational=use_variational)
 
     @staticmethod
     def get_standard_parameters(set_name='Lorenz 1963'):
@@ -47,7 +42,7 @@ class L63(EOM):
 
         return parameter_set
 
-    def _evaluate(self, stepsize, time, states):
+    def evaluate(self, stepsize, time, states):
 
         ds = states.copy()
         ds[0] = self.sigma * (states[1] - states[0])

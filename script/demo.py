@@ -27,8 +27,6 @@ state_all_z = np.zeros((int(T/dt)+1,N))
 RMSE_t_x = np.zeros(int(T/dt)+1)
 RMSE_t_y = np.zeros(int(T/dt)+1)
 RMSE_t_z = np.zeros(int(T/dt)+1)
-I_all = np.zeros(N)
-I_all_2 = np.zeros(N)
 
 #  import and setup the L63 model
 from models.Lorenz_63 import L63
@@ -125,9 +123,7 @@ for count, i in enumerate(obs_time):
         sigma = 1/N * sigma
         for k in range(N):
             I = Y[:,count] - 1/2 * (state_pri[:,k]+h_hat)
-            I_all_2[k] = 1/2 * (state_pri[:,k]+h_hat)[2]
             state_pri[:,k] += (K @ I + 1/2 * sigma) * d_lambda
-            I_all[k] = I[2]
 
         l += d_lambda
 
@@ -138,34 +134,7 @@ for count, i in enumerate(obs_time):
     state_all_x[h+int(obs_incre/dt),:]=state_post[0,:]
     state_all_y[h+int(obs_incre/dt),:]=state_post[1,:]
     state_all_z[h+int(obs_incre/dt),:]=state_post[2,:]
-
-    # figure(count+500)
-    # plot(np.linspace(0,i,int(i/dt)),state_all[0,:int(i/dt)],'r-',label='x')
-    # plot(np.linspace(0,i,int(i/dt)),state_all[1,:int(i/dt)],'g-',label='y')
-    # plot(np.linspace(0,i,int(i/dt)),state_all[2,:int(i/dt)],'b-',label='z')
-
-    # plot(time,state_ref[0,:],'r--',label='x_ref')
-    # plot(time,state_ref[1,:],'g--',label='y_ref')
-    # plot(time,state_ref[2,:],'b--',label='z_ref')
-
-    # plot(i, Y[0,count],'ro')
-    # plot(i, Y[1,count],'go')
-    # plot(i, Y[2,count],'bo')
-    # legend()
-    # show()
-
-    # figure(2)
-    # plot(time,state_ref[0,:],'r-',label='x')
-    # plot(time,state_ref[1,:],'g-',label='y')
-    # plot(time,state_ref[2,:],'b-',label='z')
-
-    # plot(obs_time, Y[0,:],'ro')
-    # plot(obs_time, Y[1,:],'go')
-    # plot(obs_time, Y[2,:],'bo')
-    # plot(i*np.ones(N),state_post[0,:],'o',color='0.5',alpha=0.05)
-    # legend()
-    # show()
-
+    
     n += 1
     h += int(obs_incre/dt) 
     t += obs_incre

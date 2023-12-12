@@ -10,6 +10,9 @@ seed(1)
 
 import sys
 sys.path.append('/Users/bryant/Desktop/control-algos')
+from models.Lorenz_63 import L63
+from integrator.wiener_rk4_maruyama import WienerRK4Maruyama
+from controller.FPF import FPF_controller
 
 #  parameters for continuous-discrete FPF
 N = 500
@@ -29,15 +32,12 @@ RMSE_t_y = np.zeros(int(T/dt)+1)
 RMSE_t_z = np.zeros(int(T/dt)+1)
 
 #  import and setup the L63 model
-from models.Lorenz_63 import L63
 EOM = L63(parameters=L63.get_standard_parameters())
 
 #  import an integrator and test L96
-from integrator.wiener_rk4_maruyama import WienerRK4Maruyama
-from numpy import identity
 Integrator = WienerRK4Maruyama(stepsize=dt)
 Integrator.add_drift_vector_field(drifting=EOM.evaluate)
-Integrator.set_brownian_motion_parameters(covariance_matrix=1 * identity(3, float))
+Integrator.set_brownian_motion_parameters(covariance_matrix=1 * np.identity(3, float))
 
 sIntegrator = Integrator.deepcopy()
 
@@ -66,6 +66,7 @@ for count, i in enumerate(obs_time):
 # show()
 
 #  FPF
+controller = FPF_controller(particle_num=N, sensor_gradient=grad_h, observation_dim=3, state_dim=3)
 t = 0.0
 n = 0
 h = 0
@@ -100,29 +101,10 @@ for count, i in enumerate(obs_time):
     l = 0
 
     while round(l,5) <= 1.0:
-        h_hat = np.mean(state_pri,axis=1)
-        h_hat_sq = h_hat.T @ h_hat
-        h_sq_hat = 0
-        for m in range(N):
-            h_sq_hat += state_pri[:,m].T @ state_pri[:,m]
-        h_sq_hat = 1/N * h_sq_hat
-        g_hat = -(h_hat_sq - h_sq_hat)
-        K = np.zeros((3,3))
-        sigma = np.zeros(3)
-        for m in range(N):
-            K += state_pri[:,m].reshape((3,1)) @ (state_pri[:,m]-h_hat).reshape(1,3)
-        K = 1/N * K  
-        g = 0
-        for p in range(3):
-            g += K[:,p].T @ grad_h[:,p]
-        for m in range(N):
-            sigma += state_pri[:,m] * (g_hat - g)
-            # print(state_pri[:,m])
-            # print(g-g_hat)
-            # print(sigma)
-        sigma = 1/N * sigma
+        K = controller.control_K(prior_state=state_pri)
+        sigma = controller.control_sigma(prior_state=state_pri,control_K=K)
         for k in range(N):
-            I = Y[:,count] - 1/2 * (state_pri[:,k]+h_hat)
+            I = Y[:,count] - 1/2 * (state_pri[:,k]+np.mean(state_pri,axis=1))
             state_pri[:,k] += (K @ I + 1/2 * sigma) * d_lambda
 
         l += d_lambda
@@ -134,7 +116,7 @@ for count, i in enumerate(obs_time):
     state_all_x[h+int(obs_incre/dt),:]=state_post[0,:]
     state_all_y[h+int(obs_incre/dt),:]=state_post[1,:]
     state_all_z[h+int(obs_incre/dt),:]=state_post[2,:]
-    
+
     n += 1
     h += int(obs_incre/dt) 
     t += obs_incre

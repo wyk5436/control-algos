@@ -29,6 +29,7 @@ class stochastic_integrator:
         # initialize parameters for noise terms
         self._square_root_of_stepsize = NotImplemented
         self.brownian_motion_dimension = NotImplemented
+        self.number_of_zeros_to_append = NotImplemented
 
         # initialize history parameters
         self._save_integration_history = True
@@ -89,17 +90,28 @@ class stochastic_integrator:
         noise += self.brownian_motion_mean
         return noise
     
+    def generate_brownian_increment_with_covariance_and_append_zeros(self) -> np.ndarray:
+        noise = np.zeros((self.brownian_motion_dimension + self.number_of_zeros_to_append))
+        noise[self.number_of_zeros_to_append:] = self.generate_brownian_increment_with_covariance()
+        return noise
+    
     # set up brownian motion parameters
     def set_brownian_motion_parameters(self,
                                        covariance_matrix: [np.ndarray, None] = None,
                                        mean: [float, np.ndarray] = 0.0,
-                                       variance: float = 1.0):
+                                       variance: float = 1.0,
+                                       number_of_zeros_to_append: [None, int] = None):
         self.brownian_motion_mean = mean
         self.brownian_motion_covariance_matrix = covariance_matrix
         self.brownian_motion_standard_deviation = 1.
+        self.number_of_zeros_to_append = number_of_zeros_to_append
         self.brownian_motion_cholesky = np.linalg.cholesky(covariance_matrix)
-        self.generate_brownian_increment = self.generate_brownian_increment_with_covariance
+        if number_of_zeros_to_append is None:
+            self.generate_brownian_increment = self.generate_brownian_increment_with_covariance
+        else:
+            self.generate_brownian_increment = self.generate_brownian_increment_with_covariance_and_append_zeros
         self.brownian_motion_dimension = self.brownian_motion_cholesky.shape[1]
+
 
     def deepcopy(self):
         return copy.deepcopy(self)

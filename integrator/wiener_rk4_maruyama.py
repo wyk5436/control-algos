@@ -138,3 +138,6 @@ class WienerRK4Maruyama(stochastic_integrator):
     
     def get_times(self):
         return self.time
+    
+    def get_noise(self):
+        return self.noise

@@ -81,17 +81,21 @@ class MPPI_controller:
     def total_cost(self):
         total_cost = 0
         self.safety_flag = True
+        # self.integrator.set_fixed_seed(seed=seed)
 
-        current_states = self.x
-        for t in np.linspace(self.t, self.T, int((self.T-self.dt-self.t)/self.dt)+1):
+        current_states = self.x.copy()
+        for count, t in enumerate(np.linspace(self.t, self.T, int((self.T-self.dt-self.t)/self.dt)+1)):
             # calculate the running cost
-            running_cost = self.running_cost(current_states=current_states)
+            running_cost = self.running_cost(current_states=current_states.copy())
             total_cost += running_cost*self.dt
 
             self.integrator.evaluate(s=current_states, t0=t, tf=t+self.dt)
             current_states = self.integrator.get_states().T[:,-1]
+            if count == 0:
+                noise = self.integrator.get_noise().T[:,-1]
 
-            self.check_safety(current_states=current_states)
+            self.check_safety(current_states=current_states.copy())
+
             if self.safety_flag == False:
                 total_cost += self.eta
                 break
@@ -99,11 +103,11 @@ class MPPI_controller:
         if self.safety_flag == True:
             total_cost += self.d * (current_states[0]**2 + current_states[1]**2)
 
-        return total_cost
+        return total_cost, noise
     
-    def controal_law(self, cost):
+    def controal_law(self, cost, noise):
         denom_i = np.exp(-cost/self.l)
-        numer = np.random.multivariate_normal(np.array((0,0)),np.identity(2),self.MC_run_total).T @ denom_i.reshape((self.MC_run_total,1))
+        numer = noise @ denom_i.reshape((self.MC_run_total,1))
         denom = np.sum(denom_i)
 
         ut = np.identity(2) * (1-self.a/self.g2)**(-1) @ numer/(np.sqrt(self.dt)*denom)
@@ -115,10 +119,13 @@ class MPPI_controller:
     def propogate_with_control(self, current_states: np.ndarray, start_time: float, finish_time: float, u, v):
         self.EOM.get_control_parameters(u=u, v=v)
 
-        self.integrator.add_drift_vector_field(drifting=self.EOM.evaluate_with_control)
-        self.integrator.set_brownian_motion_parameters(covariance_matrix=0.01*np.identity(2, float), number_of_zeros_to_append=2)
-        self.integrator.never_clear_history(never_clear_history=False)
+        Integrator = WienerRK4Maruyama(stepsize=self.dt)
+        Integrator.add_drift_vector_field(drifting=self.EOM.evaluate_with_control)
+        # Integrator.set_brownian_motion_parameters(covariance_matrix=0.01*np.identity(2, float), number_of_zeros_to_append=2)
+        Integrator.never_clear_history(never_clear_history=False)
+        # Integrator.set_random_seed(seed=seed)
+        Integrator.set_deterministic()
 
-        self.integrator.evaluate(s=current_states,t0=start_time, tf=finish_time)
+        Integrator.evaluate(s=current_states,t0=start_time, tf=finish_time)
 
-        return self.integrator.get_states().T[:,-1]
+        return Integrator.get_states().T[:,-1]

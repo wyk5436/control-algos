@@ -81,7 +81,10 @@ class WienerRK4Maruyama(stochastic_integrator):
             sp = s + h2 * k1
 
             #  generate the brownian noise
-            dW = self.generate_brownian_increment()
+            if self.deterministic:
+                dW = 0.
+            else:
+                dW = self.generate_brownian_increment()
 
             #  k2
             t += h2

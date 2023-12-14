@@ -48,3 +48,14 @@ class UAV_model:
         ds[3] = -self.k*states[3] + self.u[1] + self.v[1]
 
         return ds
+    
+    def evaluate_with_control_pid(self, stepsize, time, states):
+
+        ds = states.copy()
+
+        ds[0] = -self.k*states[0] + states[2] * math.cos(states[3])
+        ds[1] = -self.k*states[1] + states[2] * math.sin(states[3])
+        ds[2] = -self.k*states[2] + self.u
+        ds[3] = -self.k*states[3] + self.v
+
+        return ds

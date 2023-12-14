@@ -1,6 +1,7 @@
 import numbers
 import numpy as np
 import copy
+import functools
 
 
 class stochastic_integrator:
@@ -36,6 +37,15 @@ class stochastic_integrator:
         self._never_clear_history = False
 
         self._user_prefers_stepsize_versus_number_of_steps = True
+
+        self.apply_random_seed = False
+        self.random_seed = NotImplemented
+        self.get_and_set_state_of_random_number_generator = False
+        self.random_number_generator_state = NotImplemented
+        self.fixed_seed_bool = False
+        self.fixed_seed = NotImplemented
+
+        self.deterministic = False
 
     # make sure the drift vector field is empty when instantiating a new integrator
     def clear_drift_vector_field(self):
@@ -80,9 +90,92 @@ class stochastic_integrator:
     def never_clear_history(self, never_clear_history: bool = False):
         assert isinstance(never_clear_history, bool)
         self._never_clear_history = never_clear_history
+
+    # def set_random_seed(self, seed: int):
+    #     """
+
+    #     :param seed:
+    #     :return:
+
+    #     Method for setting the random number generator seed, to provide consistency for fixed trials. If any parameters
+    #     are to change in trials, then the get_and_set_random_number_generator is better.
+
+    #     This random seed will first be applied when this class is used the first time and not again after that; unless
+    #     this method is being called from 'get_and_set_random_number_generator', in which case the seed is immediately
+    #     'applied/saved'.
+    #     """
+    #     assert isinstance(seed, int)
+    #     assert -1 < seed < 4294967296
+
+    #     self.apply_random_seed = True
+    #     self.random_seed = seed
+
+    # def get_random_seed(self) -> int:
+    #     return self.random_seed
+
+    # def get_and_set_random_number_generator(self, seed: int):
+    #     """
+
+    #     :param seed:
+    #     :return:
+
+    #     Method for setting the random number generator and ensuring that the random number only advances by calls made
+    #     to the instantiate class (i.e. outside calls to numpy.random will not effect self's random number and therefore
+    #     it will pick up from where it left off).
+    #     """
+    #     self.set_random_seed(seed=seed)
+
+    #     self.get_and_set_state_of_random_number_generator = True
+
+    #     # so as not to disrupt the outside world, we must preserve the current random number,
+    #     #  yet we need to know the state corresponding to the requested seed;
+    #     #  hence, get_state(), seed(), get_state(), set_state()
+    #     current_state = np.random.get_state()
+    #     np.random.seed(self.random_seed)
+    #     self.apply_random_seed = False
+    #     self.random_number_generator_state = np.random.get_state()
+    #     np.random.set_state(current_state)
+
+    def set_fixed_seed(self, seed: int):
+        self.fixed_seed = seed
+        self.fixed_seed_bool = True
+
+    def set_deterministic(self):
+        self.deterministic = True
+
+    # def random_generator_lockstep(function):
+    #     @functools.wraps(function)
+    #     def _inner_wrapper(self):
+
+    #         #  if getting/setting: we are trying to live in our own sandbox, unobstructed from the outside world, but also
+    #         #+ not effecting the state of the outside world. Hence we must
+    #         #+ 1. get the current random state, save it, and return to it after our work here
+    #         #+ 2. use our saved random state (i.e. set it) carry out our work, and then save the final state so that we can
+    #         #+    resume in the future
+    #         if self.get_and_set_state_of_random_number_generator:
+    #             current_state = np.random.get_state()
+    #             np.random.set_state(self.random_number_generator_state)
+
+    #         elif self.apply_random_seed:
+    #             #  only set the random seed on the first call
+    #             np.random.seed(self.random_seed)
+    #             self.apply_random_seed = False
+
+    #         dW = function(self)
+
+    #         #  save your state for the future, and reset the random world to where it was before you arrived.
+    #         if self.get_and_set_state_of_random_number_generator:
+    #             self.random_number_generator_state = np.random.get_state()
+    #             np.random.set_state(current_state)
+
+    #         return dW
+    #     return _inner_wrapper
     
     # generate random samples
+    # @random_generator_lockstep
     def generate_brownian_increment_with_covariance(self) -> np.ndarray:
+        if self.fixed_seed_bool:
+            np.random.seed(self.fixed_seed)
         noise = self.brownian_motion_cholesky.dot(np.random.normal(loc=0.,
                                                          scale=self.brownian_motion_standard_deviation
                                                                * self._square_root_of_stepsize,

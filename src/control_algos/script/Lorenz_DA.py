@@ -1,12 +1,7 @@
 #  import and set the random number generator
-from random import seed
-from matplotlib.pyplot import *
-seed(1)
-
 import numpy as np
-from numpy.random import seed
 import sys
-seed(1)
+np.random.seed(1)
 
 import sys
 sys.path.append('/Users/bryant/Desktop/control-algos')

@@ -5,6 +5,7 @@ sys.path.append('..')
 from src.sim import simulate_linear_disc, simulate_nonlinear
 from src.controller.LQR import controllability, dlqr, dlqr_finite
 from src.controller.koopman import koopman_control
+from src.models.inver_pen import inverted_pen
 
     
 def test_linear():
@@ -73,3 +74,10 @@ def test_koopman():
     Y = trajectory[:, 1:]
     assert np.all(np.isclose(koopman_control(X, Y, "PID"), A)), \
     "Linear dynamics should be learned perfectly"
+    
+def test_invertPen():
+    nonlinear_pen = inverted_pen(1, 2, 3, 0.5)
+    x0 = np.array([[0.2], [0], [0], [0]])
+    assert np.all(nonlinear_pen.f(0, x0) == np.zeros([4,1])), \
+    "Perfectly stationary inverted pendulum shouldn't move"
+    

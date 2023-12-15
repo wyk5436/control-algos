@@ -1,11 +1,9 @@
-import sys
 import numpy as np
 
-sys.path.append('..')
-from src.sim import simulate_linear_disc, simulate_nonlinear
-from src.controller.LQR import controllability, dlqr, dlqr_finite
-from src.controller.koopman import koopman_control
-from src.models.inver_pen import inverted_pen
+from control_algos.sim import simulate_linear_disc, simulate_nonlinear
+from control_algos.LQR import controllability, dlqr, dlqr_finite
+from control_algos.koopman import koopman_control
+from control_algos.inver_pen import inverted_pen
 
     
 def test_linear():

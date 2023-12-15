@@ -3,7 +3,8 @@ import numpy as np
 
 sys.path.append('..')
 from src.sim import simulate_linear_disc, simulate_nonlinear
-from src.LQR import controllability, dlqr, dlqr_finite
+from src.controller.LQR import controllability, dlqr, dlqr_finite
+from src.controller.koopman import koopman_control
 
     
 def test_linear():
@@ -60,4 +61,15 @@ def test_dlqr_finite():
     Ks = dlqr_finite(A, B, Q, R, Q, 21)
     assert np.all(np.isclose(Ks[0], dlqr(A, B, Q, R))), \
     "Does not converge to dlqr when time horizon gets large"
-
+    
+def test_koopman():
+    A = np.array([[1,2],[2,0]])
+    B = np.array([[1],[0]])
+    x0 = np.array([[2],[1]])
+    C = np.eye(2)
+    u = np.zeros([1,10])
+    trajectory = simulate_linear_disc(A, B, C, u, x0)
+    X = trajectory[:, 0:-1]
+    Y = trajectory[:, 1:]
+    assert np.all(np.isclose(koopman_control(X, Y, "PID"), A)), \
+    "Linear dynamics should be learned perfectly"

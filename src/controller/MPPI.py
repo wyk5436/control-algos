@@ -1,7 +1,7 @@
 import numpy as np
 
 from models.UAV import UAV_model
-from integrator.wiener_rk4_maruyama import WienerRK4Maruyama
+from integrator.wiener_euler_maruyama import WienerEulerMaruyama
 
 class MPPI_controller:
     """
@@ -61,7 +61,7 @@ class MPPI_controller:
         self.yQ = yQ
         
         self.EOM = UAV_model(k=k)
-        self.integrator = WienerRK4Maruyama(stepsize=time_step)
+        self.integrator = WienerEulerMaruyama(stepsize=time_step)
         self.integrator.add_drift_vector_field(drifting=self.EOM.evaluate)
         self.integrator.set_brownian_motion_parameters(covariance_matrix=0.01*np.identity(2, float), number_of_zeros_to_append=2)
         self.integrator.never_clear_history(never_clear_history=False)
@@ -105,6 +105,35 @@ class MPPI_controller:
 
         return total_cost, noise
     
+    def cost_function(self, eps_1, eps_2, state, f):
+        S_tau = 0
+        safety_flag_tau = True
+
+        for t_prime in np.linspace(self.t, self.T, int((self.T-self.dt-self.t)/self.dt)+1):
+            S_tau += self.dt * (state[0]**2 + state[1]**2)
+            state[0] += f[0]*self.dt
+            state[1] += f[1]*self.dt
+            state[2] += f[2]*self.dt + 0.1*eps_1*np.sqrt(self.dt)
+            state[3] += f[3]*self.dt + 0.1*eps_2*np.sqrt(self.dt)
+
+            safety_flag_tau = self.check_safety(current_states=state)
+
+            if safety_flag_tau == False:
+                S_tau += self.eta
+                break
+
+            eps_1 = np.random.normal(loc=0., scale=1.0)
+            eps_2 = np.random.normal(loc=0., scale=1.0)
+
+            f = self.EOM.evaluate(stepsize=0.01, time=0, states=state.copy())
+
+        if safety_flag_tau == True:
+            S_tau += state[0]**2 + state[1]**2
+
+        return S_tau
+
+
+    
     def controal_law(self, cost, noise):
         denom_i = np.exp(-cost/self.l)
         numer = noise @ denom_i.reshape((self.MC_run_total,1))
@@ -119,7 +148,7 @@ class MPPI_controller:
     def propogate_with_control(self, current_states: np.ndarray, start_time: float, finish_time: float, u, v):
         self.EOM.get_control_parameters(u=u, v=v)
 
-        Integrator = WienerRK4Maruyama(stepsize=self.dt)
+        Integrator = WienerEulerMaruyama(stepsize=self.dt)
         Integrator.add_drift_vector_field(drifting=self.EOM.evaluate_with_control)
         # Integrator.set_brownian_motion_parameters(covariance_matrix=0.01*np.identity(2, float), number_of_zeros_to_append=2)
         Integrator.never_clear_history(never_clear_history=False)

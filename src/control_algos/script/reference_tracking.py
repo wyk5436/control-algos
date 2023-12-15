@@ -1,11 +1,9 @@
 import numpy as np
 from matplotlib.pyplot import *
 
-import sys
-sys.path.append('/Users/bryant/Desktop/control-algos')
-from controller.pid import pid_controller
-from models.UAV import UAV_model
-from integrator.wiener_rk4_maruyama import WienerRK4Maruyama
+from control_algos.controller.pid import pid_controller
+from control_algos.models.UAV import UAV_model
+from control_algos.integrator.wiener_rk4_maruyama import WienerRK4Maruyama
 
 # define parameters
 t = 0.

@@ -1,13 +1,10 @@
 #  import and set the random number generator
 import numpy as np
-import sys
 np.random.seed(1)
 
-import sys
-sys.path.append('/Users/bryant/Desktop/control-algos')
-from models.Lorenz_63 import L63
-from integrator.wiener_rk4_maruyama import WienerRK4Maruyama
-from controller.FPF import FPF_controller
+from control_algos.models.Lorenz_63 import L63
+from control_algos.integrator.wiener_rk4_maruyama import WienerRK4Maruyama
+from control_algos.controller.FPF import FPF_controller
 
 #  parameters for continuous-discrete FPF
 N = 500

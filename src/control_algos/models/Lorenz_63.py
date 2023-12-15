@@ -1,6 +1,3 @@
-from eom.eom import EOM
-
-
 class L63:
     """The Lorenz 1963 Model."""
 

@@ -1,18 +1,10 @@
 #  import and set the random number generator
-from random import seed
-from matplotlib.pyplot import *
-seed(1)
-
 import numpy as np
-from numpy.random import seed
-import sys
-seed(1)
+np.random.seed(1)
 
-import sys
-sys.path.append('/Users/bryant/Desktop/control-algos')
-from models.Lorenz_63 import L63
-from integrator.wiener_rk4_maruyama import WienerRK4Maruyama
-from controller.FPF import FPF_controller
+from control_algos.models.Lorenz_63 import L63
+from control_algos.integrator.wiener_rk4_maruyama import WienerRK4Maruyama
+from control_algos.controller.FPF import FPF_controller
 
 #  parameters for continuous-discrete FPF
 N = 500

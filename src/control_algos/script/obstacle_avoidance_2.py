@@ -3,9 +3,8 @@ from matplotlib.pyplot import *
 from matplotlib.patches import Rectangle
 from tqdm import tqdm
 
-import sys
-sys.path.append('/Users/bryant/Desktop/control-algos')
-from controller.MPPI import MPPI_controller
+from control_algos.controller.MPPI import MPPI_controller
+from control_algos.models.UAV import UAV_model
 
 # Define parameters
 traj_num = 5 # number of trajectories in total
@@ -22,8 +21,11 @@ sigma2 = 0.01
 l = sigma2/(1/a-1/g2)
 k = 0.288
 count_failure = 0
-# np.random.seed(2)
-
+eps_t_all = np.zeros((2,MC_run_total))
+G = np.zeros((4,2))
+G[2,0] = 1
+G[3,1] = 1
+np.random.seed(1234)
 
 xP = -0.5
 yP = -0.5
@@ -72,6 +74,7 @@ gca().add_patch(inner_rect2)
 scatter(x0[0], x0[1], marker='*', s=500, edgecolor='yellow', facecolor='yellow', linewidth=2)
 scatter(0, 0, marker='*', s=500, edgecolor='green', facecolor='green', linewidth=2)
 
+EOM = UAV_model(k=k)
 for traj in range(traj_num):
     print(f"Current trajectory={traj+1}")
     x = np.zeros((4, int(T/dt)+1))
@@ -80,7 +83,11 @@ for traj in range(traj_num):
     cost = np.zeros(MC_run_total)
     noise = np.zeros((2, MC_run_total))
     xt = x0.copy()
+    f = EOM.evaluate(stepsize=dt, time=0, states=xt)
     for count, t in tqdm(enumerate(np.linspace(0.0,T-dt,int((T-dt)/dt)+1)), total=len(np.linspace(0.0,T-dt,int((T-dt)/dt)+1)), desc="Processing", unit="time step"):
+        eps_t_all_1 = np.random.normal(loc=0., scale=1.0, size=MC_run_total)
+        eps_t_all_2 = np.random.normal(loc=0., scale=1.0, size=MC_run_total)
+
         controller = MPPI_controller(MC_run_total=MC_run_total,
                                      current_time=t, 
                                      final_time=T, 
@@ -105,16 +112,23 @@ for traj in range(traj_num):
                                      yP=yP,
                                      yQ=yQ)
         for MC_run in range(MC_run_total):
-            cost_i, noise_i = controller.total_cost()
+            cost_i = controller.cost_function(eps_1=eps_t_all_1[MC_run], eps_2=eps_t_all_2[MC_run],state=xt.copy(),f=f.copy())
             cost[MC_run] = cost_i
-            noise[:,MC_run] = noise_i[2:]
         
-        noise_unscaled = noise / (np.sqrt(dt) * 0.1)
+        eps_t_all[0,:] = eps_t_all_1
+        eps_t_all[1,:] = eps_t_all_2
 
-        ut, vt = controller.controal_law(cost=cost, noise=noise_unscaled)
+        denom_i = np.exp(-cost/l)
+        numer = eps_t_all @ denom_i
+        denom = np.sum(denom_i)
 
-        # xt = controller.propogate_with_control(current_states=xt.copy(), start_time=t, finish_time=t+dt, seed=np.random.randint(500000,1000000), u=ut, v=vt)
-        xt = controller.propogate_with_control(current_states=xt.copy(), start_time=t, finish_time=t+dt, u=ut, v=vt)
+        ut = np.identity(2) * (1-a/g2)**(-1) @ numer/(np.sqrt(dt)*denom)
+        vt = -np.identity(2) * (g2/a-1)**(-1) @ numer/(np.sqrt(dt)*denom)
+
+        xt[0] += f[0] * dt + G[0,:] @ ut * dt +G[0,:] @ vt * dt
+        xt[1] += f[1] * dt + G[1,:] @ ut * dt +G[1,:] @ vt * dt
+        xt[2] += f[2] * dt + G[2,:] @ ut * dt +G[2,:] @ vt * dt
+        xt[3] += f[3] * dt + G[3,:] @ ut * dt +G[3,:] @ vt * dt
 
         x[:,count+1] = xt
 
@@ -124,6 +138,8 @@ for traj in range(traj_num):
             traj_fail += 1
             count_failure = count
             break
+
+        f = EOM.evaluate(stepsize=dt, time=0, states=xt)
 
     # print(ut_all)
     # print(vt_all)

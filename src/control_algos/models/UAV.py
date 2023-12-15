@@ -1,4 +1,3 @@
-from eom.eom import EOM
 import math
 
 class UAV_model:

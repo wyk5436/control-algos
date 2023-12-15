@@ -1,7 +1,7 @@
 import numpy as np
 
-from models.UAV import UAV_model
-from integrator.wiener_euler_maruyama import WienerEulerMaruyama
+from control_algos.models.UAV import UAV_model
+from control_algos.integrator.wiener_euler_maruyama import WienerEulerMaruyama
 
 class MPPI_controller:
     """

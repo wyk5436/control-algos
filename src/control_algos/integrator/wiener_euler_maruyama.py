@@ -1,10 +1,7 @@
-import sys
-sys.path.append('/Users/bryant/Desktop/control-algos')
-
 import numpy as np
 import numbers
-from integrator.stochastic_integrator import stochastic_integrator
 
+from control_algos.integrator.stochastic_integrator import stochastic_integrator
 
 class WienerEulerMaruyama(stochastic_integrator):
     """

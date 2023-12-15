@@ -1,9 +1,7 @@
-import sys
 import numpy as np
 
-sys.path.append('..')
-from src.sim import simulate_linear_disc, simulate_nonlinear
-from src.LQR import controllability, dlqr, dlqr_finite
+from control_algos.sim import simulate_linear_disc, simulate_nonlinear
+from control_algos.LQR import controllability, dlqr, dlqr_finite
 
     
 def test_linear():

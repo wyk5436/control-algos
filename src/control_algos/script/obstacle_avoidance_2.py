@@ -3,10 +3,8 @@ from matplotlib.pyplot import *
 from matplotlib.patches import Rectangle
 from tqdm import tqdm
 
-import sys
-sys.path.append('/Users/bryant/Desktop/control-algos')
-from controller.MPPI import MPPI_controller
-from models.UAV import UAV_model
+from control_algos.controller.MPPI import MPPI_controller
+from control_algos.models.UAV import UAV_model
 
 # Define parameters
 traj_num = 5 # number of trajectories in total

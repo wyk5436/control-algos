@@ -30,6 +30,10 @@ def simulate_linear_disc(A: np.ndarray, B: np.ndarray,
     x[:, 0] = x0.reshape(-1);
     y[:, 0] = np.reshape(C @ x0, -1)
     if np.linalg.norm(K) != 0:
+        x = np.zeros([n, steps + 1])
+        y = np.zeros([l, steps + 1])
+        x[:, 0] = x0.reshape(-1);
+        y[:, 0] = np.reshape(C @ x0, -1)
         for i in range(1, steps + 1):
             x[:, i:i + 1] = A @ x[:, i - 1:i] + B @ (-K @ x[:, i - 1:i])
             y[:, i:i + 1] = C @ x[:, i:i + 1]     

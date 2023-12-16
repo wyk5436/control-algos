@@ -1,5 +1,5 @@
 import numpy as np
-from src.controller.LQR import dlqr, dlqr_finite
+from control_algos.controller.LQR import dlqr, dlqr_finite
 
 
 def koopman_control(X: np.ndarray, Y: np.ndarray, method: str, 

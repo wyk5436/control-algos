@@ -1,3 +1,7 @@
+###
+# NOTE: This script does the same thing as "obstacle_avoidance.py", but does not use the inegrator class.
+# This runs faster than the other one.
+###
 import numpy as np
 from matplotlib.pyplot import *
 from matplotlib.patches import Rectangle
@@ -74,6 +78,7 @@ gca().add_patch(inner_rect2)
 scatter(x0[0], x0[1], marker='*', s=500, edgecolor='yellow', facecolor='yellow', linewidth=2)
 scatter(0, 0, marker='*', s=500, edgecolor='green', facecolor='green', linewidth=2)
 
+# MPPI
 EOM = UAV_model(k=k)
 for traj in range(traj_num):
     print(f"Current trajectory={traj+1}")
@@ -127,8 +132,8 @@ for traj in range(traj_num):
 
         xt[0] += f[0] * dt + G[0,:] @ ut * dt +G[0,:] @ vt * dt
         xt[1] += f[1] * dt + G[1,:] @ ut * dt +G[1,:] @ vt * dt
-        xt[2] += f[2] * dt + G[2,:] @ ut * dt +G[2,:] @ vt * dt
-        xt[3] += f[3] * dt + G[3,:] @ ut * dt +G[3,:] @ vt * dt
+        xt[2] += f[2] * dt + G[2,:] @ ut * dt +G[2,:] @ vt * dt + 0.1 * np.random.normal(loc=0., scale=1.0) * np.sqrt(dt)
+        xt[3] += f[3] * dt + G[3,:] @ ut * dt +G[3,:] @ vt * dt + 0.1 * np.random.normal(loc=0., scale=1.0) * np.sqrt(dt)
 
         x[:,count+1] = xt
 
@@ -140,15 +145,6 @@ for traj in range(traj_num):
             break
 
         f = EOM.evaluate(stepsize=dt, time=0, states=xt)
-
-    # print(ut_all)
-    # print(vt_all)
-
-        # print(x)
-
-        # figure(2)
-        # plot(x[0,:count+1],x[1,:count+1],'b-',linewidth=1)
-        # show()
 
     if safety_flag_traj == True:
         figure(2)

@@ -18,8 +18,6 @@ class WienerRK4Maruyama(stochastic_integrator):
 
     """
 
-    __author__ = 'bryantzhou'
-
     def evaluate(self, s: np.ndarray, t0: numbers.Real, tf: numbers.Real, clear_history: bool = True):
         assert isinstance(s, np.ndarray)
         assert s.ndim == 1

@@ -105,7 +105,7 @@ class MPPI_controller:
 
         return total_cost, noise
     
-    def cost_function(self, eps_1, eps_2, state, f):
+    def cost_function(self, eps_1, eps_2, state, f): # this is specifically for the obstacle_avoidance_2 implementation
         S_tau = 0
         safety_flag_tau = True
 
@@ -132,8 +132,6 @@ class MPPI_controller:
 
         return S_tau
 
-
-    
     def controal_law(self, cost, noise):
         denom_i = np.exp(-cost/self.l)
         numer = noise @ denom_i.reshape((self.MC_run_total,1))
@@ -150,10 +148,8 @@ class MPPI_controller:
 
         Integrator = WienerEulerMaruyama(stepsize=self.dt)
         Integrator.add_drift_vector_field(drifting=self.EOM.evaluate_with_control)
-        # Integrator.set_brownian_motion_parameters(covariance_matrix=0.01*np.identity(2, float), number_of_zeros_to_append=2)
+        Integrator.set_brownian_motion_parameters(covariance_matrix=0.01*np.identity(2, float), number_of_zeros_to_append=2)
         Integrator.never_clear_history(never_clear_history=False)
-        # Integrator.set_random_seed(seed=seed)
-        Integrator.set_deterministic()
 
         Integrator.evaluate(s=current_states,t0=start_time, tf=finish_time)
 

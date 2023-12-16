@@ -1,11 +1,12 @@
 #  import and set the random number generator
 import numpy as np
-np.random.seed(1)
+from matplotlib.pyplot import *
 
 from control_algos.models.Lorenz_63 import L63
 from control_algos.integrator.wiener_rk4_maruyama import WienerRK4Maruyama
 from control_algos.controller.FPF import FPF_controller
 
+np.random.seed(1)
 #  parameters for continuous-discrete FPF
 N = 500
 d_lambda = 0.01
@@ -45,17 +46,6 @@ Y = np.zeros([3,len(obs_time)])
 for count, i in enumerate(obs_time):
     time_index = int(i/dt)
     Y[:,count] = state_ref[:,time_index] + np.random.multivariate_normal(np.zeros(3),np.identity(3, float)).T
-
-# figure(1)
-# plot(time,state_ref[0,:],'r-',label='x')
-# plot(time,state_ref[1,:],'g-',label='y')
-# plot(time,state_ref[2,:],'b-',label='z')
-
-# plot(obs_time, Y[0,:],'ro')
-# plot(obs_time, Y[1,:],'go')
-# plot(obs_time, Y[2,:],'bo')
-# legend()
-# show()
 
 #  FPF
 controller = FPF_controller(particle_num=N, sensor_gradient=grad_h, observation_dim=3, state_dim=3)
@@ -114,7 +104,6 @@ for count, i in enumerate(obs_time):
     t += obs_incre
 
 # RMSE
-
 RMSE_t_x = np.sqrt(np.mean((state_all_x-state_ref[0,:].reshape((int(T/dt)+1,1)))**2,axis=1))
 RMSE_t_y = np.sqrt(np.mean((state_all_y-state_ref[1,:].reshape((int(T/dt)+1,1)))**2,axis=1))
 RMSE_t_z = np.sqrt(np.mean((state_all_z-state_ref[2,:].reshape((int(T/dt)+1,1)))**2,axis=1))
@@ -122,3 +111,12 @@ RMSE_t_z = np.sqrt(np.mean((state_all_z-state_ref[2,:].reshape((int(T/dt)+1,1)))
 RMSE_mean = 1/3 * (RMSE_t_x + RMSE_t_y + RMSE_t_z)
 
 print(f"Average RMSE from continuous discrete FPF={RMSE_mean}")
+
+figure(1)
+plot(np.linspace(0.,T,int(T/dt+1)),np.mean(state_all_x, axis=1), label='Posterior')
+plot(np.linspace(0.,T,int(T/dt+1)),state_ref[0,:], label='Reference')
+scatter(obs_time, Y[0,:], color='black', label='Observations')
+xlabel('Time (s)')
+ylabel('x_t')
+legend()
+show()

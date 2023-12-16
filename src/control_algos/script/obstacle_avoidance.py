@@ -1,3 +1,8 @@
+###
+# NOTE: This script does the same thing as "obstacle_avoidance_2.py", but uses the inegrator class.
+# This runs slower than the other one.
+###
+
 import numpy as np
 from matplotlib.pyplot import *
 from matplotlib.patches import Rectangle

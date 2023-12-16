@@ -2,7 +2,9 @@ import numpy as np
 from typing import Callable
 
 def simulate_linear_disc(A: np.ndarray, B: np.ndarray, 
-                         C: np.ndarray, u: np.ndarray, x0: np.ndarray) -> np.ndarray:
+                         C: np.ndarray, u: np.ndarray, x0: np.ndarray, 
+                         K: np.ndarray = np.zeros([1,4]), 
+                         steps = 0) -> np.ndarray:
     '''
     Simulate linear discrete dynamics, with the state-space system having the form of
     x_{k+1} = A*x_k + B*u_k
@@ -27,9 +29,14 @@ def simulate_linear_disc(A: np.ndarray, B: np.ndarray,
     y = np.zeros([l, k + 1])
     x[:, 0] = x0.reshape(-1);
     y[:, 0] = np.reshape(C @ x0, -1)
-    for i in range(1, k + 1):
-        x[:, i:i + 1] = A @ x[:, i - 1:i] + B @ u[:, i - 1:i]
-        y[:, i:i + 1] = C @ x[:, i:i + 1]     
+    if np.linalg.norm(K) != 0:
+        for i in range(1, steps + 1):
+            x[:, i:i + 1] = A @ x[:, i - 1:i] + B @ (-K @ x[:, i - 1:i])
+            y[:, i:i + 1] = C @ x[:, i:i + 1]     
+    else:      
+        for i in range(1, k + 1):
+            x[:, i:i + 1] = A @ x[:, i - 1:i] + B @ u[:, i - 1:i]
+            y[:, i:i + 1] = C @ x[:, i:i + 1]     
     return y
 
 def simulate_nonlinear(f: Callable[[np.ndarray], np.ndarray], 
